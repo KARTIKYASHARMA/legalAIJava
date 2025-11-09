@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>LegalAI Chat</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        #chat-box {
+            height: 500px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            background: white;
+        }
+        .message-container { margin: 10px 0; clear: both; }
+        .user-msg {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            max-width: 70%;
+            float: right;
+        }
+        .bot-msg {
+            background-color: #e9ecef;
+            color: #333;
+            padding: 10px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            max-width: 70%;
+            float: left;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>⚖️ LegalAI Chat Assistant</h2>
+        <div>
+            <span class="me-3">Welcome, <strong th:text="${username}"></strong></span>
+            <form th:action="@{/logout}" method="post" style="display:inline;">
+                <button class="btn btn-outline-danger btn-sm" type="submit">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="chat-box" class="mb-3">
+        <!-- Load existing messages -->
+        <div th:each="msg : ${messages}" class="message-container">
+            <div th:classappend="${msg.bot} ? 'bot-msg' : 'user-msg'"
+                 th:text="${msg.message}"></div>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <input type="text" id="userInput" class="form-control"
+               placeholder="Ask your legal question..." />
+        <button class="btn btn-primary" id="sendBtn">Send</button>
+    </div>
+</div>
+
+<script>
+    const chatBox = document.getElementById("chat-box");
+    const userInput = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+
+    sendBtn.addEventListener("click", sendMessage);
+    userInput.addEventListener("keypress", e => {
+        if (e.key === "Enter") sendMessage();
+    });
+
+    async function sendMessage() {
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        appendMessage(false, message);
+        userInput.value = "";
+
+        try {
+            const response = await fetch("/chat/send", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ message })
+            });
+
+            const data = await response.json();
+            appendMessage(true, data.reply || "No response from LegalAI.");
+        } catch (error) {
+            appendMessage(true, "Error connecting to server.");
+        }
+    }
+
+    function appendMessage(isBot, text) {
+        const container = document.createElement("div");
+        container.className = "message-container";
+
+        const msg = document.createElement("div");
+        msg.className = isBot ? "bot-msg" : "user-msg";
+        msg.innerText = text;
+
+        container.appendChild(msg);
+        chatBox.appendChild(container);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+</script>
+</body>
+</html>
