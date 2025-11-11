@@ -37,33 +37,50 @@
     <div class="row justify-content-center">
         <div class="col-md-5">
             <div class="glass-card">
+
                 <h3 class="text-center mb-3">🔐 LegalAI Login</h3>
 
+                <!-- Messages -->
                 <div th:if="${param.registered}" class="alert alert-success">
                     Registration successful! Please login.
                 </div>
+
                 <div th:if="${param.error}" class="alert alert-danger">
                     Invalid username or password.
                 </div>
+
                 <div th:if="${param.logout}" class="alert alert-info">
                     You have been logged out.
                 </div>
 
                 <form th:action="@{/login}" method="post">
+
+                    <!-- Username -->
                     <div class="mb-3">
                         <label class="form-label">Username</label>
-                        <input type="text" name="username" class="form-control" required />
+                        <input type="text"
+                               name="username"
+                               class="form-control"
+                               required />
                     </div>
+
+                    <!-- Password -->
                     <div class="mb-3">
                         <label class="form-label">Password</label>
-                        <input type="password" name="password" class="form-control" required />
+                        <input type="password"
+                               name="password"
+                               class="form-control"
+                               required />
                     </div>
+
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary">Login</button>
                     </div>
+
                     <div class="text-center mt-3">
                         <p>Don't have an account? <a th:href="@{/register}">Register here</a></p>
                     </div>
+
                 </form>
             </div>
         </div>
