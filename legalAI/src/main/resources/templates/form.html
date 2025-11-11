@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Form Filling – LegalAI</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 40%, #2b2b2b 70%, #000000 100%);
+            color: #f1f1f1;
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+        h2 {
+            font-weight: 600;
+            color: #fff;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #0056b3, #00a2ff);
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container mt-4">
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3 glass-card">
+        <h2>📄 Automated Form Filling</h2>
+
+        <div>
+            <a th:href="@{/chat}" class="btn btn-secondary btn-sm me-3">💬 Back to Chat</a>
+
+            <span class="me-3">Welcome, <strong th:text="${username}"></strong></span>
+
+            <form th:action="@{/logout}" method="post" style="display:inline;">
+                <button class="btn btn-outline-danger btn-sm" type="submit">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- FORM SECTION -->
+    <div class="glass-card">
+
+        <h4 class="mb-3">Fill details</h4>
+
+        <!-- TEMPLATE DROPDOWN -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label>Select Template</label>
+                <select id="templateType" class="form-control" onchange="loadFields()">
+                    <option value="consumer">Consumer Complaint</option>
+                    <option value="rental">Rental Agreement</option>
+                    <option value="rti">RTI Form</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Dynamic form will load here -->
+        <div id="dynamicForm" class="row g-3"></div>
+
+        <div class="mt-4">
+            <button onclick="generate()" class="btn btn-primary">Generate Document</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * Field configurations per template
+     */
+    const templateFields = {
+        consumer: [
+            { id: "StateAndCity", label: "State & City" },
+
+            { id: "ComplainantName", label: "Complainant Name" },
+            { id: "ComplainantAddress", label: "Complainant Address" },
+            { id: "ComplainantMobileNo", label: "Complainant Mobile No" },
+            { id: "ComplainantEmail", label: "Complainant Email" },
+
+            { id: "OpponentName", label: "Opponent Name" },
+            { id: "OpponentAddress", label: "Opponent Address" },
+            { id: "OpponentMobileNo", label: "Opponent Mobile No" },
+            { id: "OpponentEmail", label: "Opponent Email" },
+
+            { id: "CauseOfAction", label: "Cause of Action" },
+
+            { id: "DeficiencyDetails", label: "Deficiency Details" },
+            { id: "GoodsDetails", label: "Goods Details" },
+            { id: "AmountPaid", label: "Amount Paid" },
+            { id: "WarrantyDetails", label: "Warranty Details" },
+
+            { id: "UnfairTradePractice", label: "Unfair Trade Practice" },
+            { id: "DamageDetails", label: "Damage Details" },
+
+            { id: "Verbal", label: "Verbal Try" },
+            { id: "Written", label: "Written Try" },
+            { id: "EcommerceToken", label: "E-Commerce Token" },
+            { id: "Result", label: "Result" },
+
+            { id: "JurisdictionReason", label: "Jurisdiction Reason" },
+
+            { id: "ClaimAmount", label: "Claim Amount" },
+
+            { id: "OtherCases", label: "Other Cases" },
+            { id: "OtherDetails", label: "Other Details" },
+
+            { id: "PrayerRefund", label: "Prayer Refund" },
+            { id: "PrayerReplaceGoods", label: "Prayer Replace Goods" },
+            { id: "PrayerRemoveDefects", label: "Prayer Remove Defects" },
+            { id: "PrayerCompensationForDeficiency", label: "Compensation for Deficiency" },
+            { id: "PrayerMentalTorture", label: "Compensation for Mental Torture" },
+            { id: "PrayerInsurance", label: "Insurance Related" },
+            { id: "PrayerOthers", label: "Other Prayer" },
+
+            { id: "CompensationCalculation", label: "Compensation Calculation" },
+
+            { id: "FeeAmount", label: "Fee Amount" },
+            { id: "DemandDraftNo", label: "Demand Draft No" },
+            { id: "FeeDate", label: "Fee Date" },
+            { id: "PaymentMode", label: "Payment Mode" },
+
+            { id: "RepName", label: "Representative Name" },
+            { id: "RepAddress", label: "Representative Address" },
+            { id: "RepMobileNo", label: "Representative Mobile No" },
+            { id: "RepEmail", label: "Representative Email" },
+
+            { id: "Place", label: "Place" }
+        ]
+        ,
+        rental: [
+            { id: "Place", label: "Place" },
+            { id: "Date", label: "Date" },
+            { id: "Month", label: "Month" },
+            { id: "Year", label: "Year" },
+
+            { id: "OwnerName", label: "Owner Name" },
+            { id: "FatherOfOwner", label: "Father of Owner" },
+            { id: "OwnerAddress", label: "Owner Address" },
+
+            { id: "TenantName", label: "Tenant Name" },
+            { id: "FatherOfTenant", label: "Father of Tenant" },
+            { id: "AddressOfOfficeOrInstitution", label: "Office/Institution Address" },
+            { id: "TenantAddress", label: "Tenant Address" },
+
+            { id: "RentalAddress", label: "Rental Address" },
+
+            { id: "StartingDateOfAgreement", label: "Agreement Start Date" },
+            { id: "ExpiryDateOfAgreement", label: "Agreement End Date" },
+
+            { id: "RentalAmount", label: "Monthly Rent" },
+            { id: "MaintenanceAmount", label: "Maintenance Amount" },
+
+            { id: "SecurityDepositAmount", label: "Security Deposit" },
+            { id: "ChequeNo", label: "Cheque No" },
+            { id: "ChequeDate", label: "Cheque Date" },
+
+            { id: "JurisdictionCity", label: "Jurisdiction City" },
+
+            { id: "NumberOfBedrooms", label: "No. of Bedrooms" },
+            { id: "NumberOfFans", label: "No. of Fans" },
+            { id: "NumberOfCFLLights", label: "No. of CFL Lights" },
+            { id: "NumberOfGeysers", label: "No. of Geysers" },
+            { id: "NumberOfMirrors", label: "No. of Mirrors" }
+        ],
+
+        rti: [
+            { id: "Name", label: "Applicant Name" },
+            { id: "Address", label: "Applicant Address" },
+            { id: "Email", label: "Email" },
+            { id: "TelNo", label: "Phone Number" },
+            { id: "Residence", label: "Residence" },
+
+            { id: "Address1", label: "Address Line 1" },
+            { id: "Address2", label: "Address Line 2" },
+
+            { id: "Department", label: "Department" },
+            { id: "Information", label: "Information Requested" },
+            { id: "Period", label: "Period" },
+            { id: "Others", label: "Other Details" },
+
+            { id: "receiptNo", label: "Receipt Number" },
+            { id: "receiptDate", label: "Receipt Date" },
+
+            { id: "place", label: "Place" },
+            { id: "date", label: "Date" }
+        ]
+    };
+
+    /**
+     * Render fields dynamically when template changes
+     */
+    function loadFields() {
+        const type = document.getElementById("templateType").value;
+        const fields = templateFields[type];
+
+        let html = "";
+        fields.forEach(f => {
+            html += `
+        <div class="col-md-4">
+            <label>${f.label}</label>
+            <input id="${f.id}" class="form-control" placeholder="Enter ${f.label}">
+        </div>`;
+        });
+
+        document.getElementById("dynamicForm").innerHTML = html;
+    }
+
+    // Load default form
+    loadFields();
+
+
+    /**
+     * Send JSON + download DOCX
+     */
+    async function generate() {
+        const type = document.getElementById("templateType").value;
+        const fields = templateFields[type];
+
+        let data = {};
+
+        fields.forEach(f => {
+            data[f.id] = document.getElementById(f.id).value;
+        });
+
+        const payload = { template: type, data };
+
+        const res = await fetch("/api/doc/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${type}_Filled.docx`;
+        a.click();
+    }
+
+</script>
+
+</body>
+</html>

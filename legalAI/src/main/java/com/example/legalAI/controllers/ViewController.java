@@ -6,6 +6,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+
 @Controller
 public class ViewController {
 
@@ -40,4 +42,13 @@ public class ViewController {
     public String home() {
         return "redirect:/chat";
     }
+
+
+    @GetMapping("/form")
+    public String formPage(Model model, Principal principal) {
+        String name = (principal != null) ? principal.getName() : "Guest";
+        model.addAttribute("username", name);
+        return "form";
+    }
+
 }
